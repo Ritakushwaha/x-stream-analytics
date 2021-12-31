@@ -1,7 +1,7 @@
 # Twitter_Data_Streaming
 Twitter data streaming using APIs
 
-## Use Case:
+## Use Case 1:
 Streaming real-time Twitter data using twitter API, Kafka, Python.
 
 ## Prerequisite:
