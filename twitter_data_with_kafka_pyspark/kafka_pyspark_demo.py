@@ -5,25 +5,41 @@ Created on Fri Jan  7 14:04:48 2022
 
 @author: rita
 """
-import findspark
-findspark.init()
 
-from pyspark import SparkContext
-from pyspark.streaming import StreamingContext
-from pyspark.streaming.kafka import KafkaUtils
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import explode, split, window
 
-if __name__ == '__main__':
-    sc = SparkContext(appName='Kafka_Spark')
-    ssc = StreamingContext(sc, 60)
+sparkSession = SparkSession \
+    .builder \
+    .appName("TwitterStreamingAssignment") \
+    .master("local") \
+    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.0") \
+    .getOrCreate()
+
+twitterDataDF = sparkSession.readStream \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", "localhost:9092") \
+    .option("subscribe", "trump") \
+    .option("startingOffsets", "earliest") \
+    .load()
     
-    message = KafkaUtils.createDirectStream(ssc, topics='trump',kafkaParams={'metadata.broker.list':'localhost:9092'})
-    
-    words = message.map(lambda x: x[1]).flatmap(lambda x:x.split(" "))
-    wordcount = words.map(lambda x: (x,1)).reduceByKey(lambda a,b :a+b)
-    
-    wordcount.pprint()
-    
-    ssc.start()
-    ssc.awaitTermination()
-    
-    
+twitterDataDF.writeStream.outputMode("update").format("console").start()
+
+#twitterDataDF = twitterDataDF.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)", "CAST(timestamp AS TIMESTAMP)")
+
+#print(twitterDataDF)
+
+'''
+words = twitterDataDF\
+    .select(explode(split(twitterDataDF.value, " ")).alias("word"),twitterDataDF["timestamp"])
+
+count = words.select(words['word'],words['timestamp'])\
+    .filter(words["word"] == "omicron")\
+    .groupBy(window(words["timestamp"],"2 minutes"),words["word"])\
+    .count()
+
+
+query = count.writeStream.outputMode("complete").format("console").start()
+
+sparkSession.streams.awaitAnyTermination()
+'''
