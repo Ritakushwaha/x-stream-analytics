@@ -25,11 +25,9 @@ twitterDataDF = sparkSession.readStream \
     
 twitterDataDF.writeStream.outputMode("update").format("console").start()
 
-#twitterDataDF = twitterDataDF.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)", "CAST(timestamp AS TIMESTAMP)")
+twitterDataDF = twitterDataDF.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)", "CAST(timestamp AS TIMESTAMP)")
 
-#print(twitterDataDF)
 
-'''
 words = twitterDataDF\
     .select(explode(split(twitterDataDF.value, " ")).alias("word"),twitterDataDF["timestamp"])
 
@@ -42,4 +40,4 @@ count = words.select(words['word'],words['timestamp'])\
 query = count.writeStream.outputMode("complete").format("console").start()
 
 sparkSession.streams.awaitAnyTermination()
-'''
+

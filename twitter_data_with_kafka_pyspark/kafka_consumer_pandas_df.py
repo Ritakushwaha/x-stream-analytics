@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 from collections import Counter
 import re
 
-    
 
 d ={}
 l = []
@@ -40,8 +39,7 @@ def consumer_reader():
                     if i == "":
                         pass
                     else:
-                        omi_list.append(re.sub(r"[^a-zA-Z0-9]","",i.lower()))
-                        
+                        omi_list.append(re.sub(r"[^a-zA-Z0-9]","",i.lower()))             
                     
         c = Counter(omi_list)
         count_dict=dict(c)

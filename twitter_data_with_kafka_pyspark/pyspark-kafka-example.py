@@ -5,28 +5,36 @@ Created on Tue Jan 11 16:53:46 2022
 
 @author: rita
 """
-from pyspark.sql import SparkSession
+
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
 import time
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import explode, split, window
 
 kafka_topic_name = "trump"
 
 kafka_bootstrap_servers = "localhost:9092"
 
 if __name__ == "__main__":
-    spark = SparkSession.builder\
-        .appName("Kafka Pyspark Streamin Learning")\
-            .master("local[*]").getOrCreate()
-    spark.sparkContext.setLogLevel("ERROR")
+    
+
+    sparkSession = SparkSession \
+        .builder \
+        .appName("TwitterStreamingAssignment") \
+        .master("local") \
+        .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.0") \
+        .getOrCreate()
 
     # id,status_update,created_by,created_time,media_url,posted_ip,privacy_settings,post_status
-    posts_df = spark.readStream.format("kafka")\
-        .option("kafka.bootstrap.servers", kafka_bootstrap_servers)\
-            .option("subscribe", kafka_topic_name)\
-                .option("startingOffsets", "latest")\
-                    .load()
-    # posts_df.printSchema()
+    post_df = sparkSession.readStream \
+        .format("kafka") \
+        .option("kafka.bootstrap.servers", "localhost:9092") \
+        .option("subscribe", "trump") \
+        .option("startingOffsets", "earliest") \
+        .load()
+                    
+    posts_df.printSchema()
     posts_df1 = posts_df.selectExpr("CAST(value as STRING)", "timestamp")
     posts_schema = StructType() \
         .add("id", StringType())\
