@@ -32,12 +32,12 @@ words = twitterDataDF\
     .select(explode(split(twitterDataDF.value, " ")).alias("word"),twitterDataDF["timestamp"])
 
 count = words.select(words['word'],words['timestamp'])\
-    .filter(words["word"] == "omicron")\
+    .filter(words["word"] == "india")\
     .groupBy(window(words["timestamp"],"2 minutes"),words["word"])\
     .count()
 
 
-query = count.writeStream.outputMode("complete").format("console").start()
+query = count.writeStream.outputMode("append").format("console").start()
 
 sparkSession.streams.awaitAnyTermination()
 
