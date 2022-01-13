@@ -27,9 +27,11 @@ def consumer_reader():
         for i in message.value.decode('utf8').split('\n'):
             l.append(i.split(':'))
         for j in l:
+            print(j)
             if len(j)>1:
                 d[j[0]] = [j[1]]
         df = pd.DataFrame(d)
+        
         #df['Hashtags'].to_csv('./output.csv',mode='a',header=False,index=False)
 
         if len(df['Hashtags'][0])>2 :
