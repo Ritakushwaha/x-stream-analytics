@@ -11,7 +11,6 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import explode, split, window
 from pyspark.sql.functions import *
 from bson.json_util import *
-
 import matplotlib.pyplot as plt
 
 kafka_topic_name = "trump"
@@ -24,14 +23,7 @@ jsonOptions = { "timestampFormat": nestTimestampFormat }
 
 def all_tweet_data(posts_df):
    
-    col_stream = posts_df.writeStream.trigger(processingTime='5 seconds')\
-    .outputMode('update')\
-    .option("truncate", "false")\
-    .option("checkpointLocation", ".checkpoint/col_stream_checkpoint")\
-    .format("console")\
-    .start()
-                    
-    col_stream.awaitTermination(1)
+    pass
     
 
 def hashtags_globally(posts_df):
@@ -45,7 +37,7 @@ def hashtags_globally(posts_df):
     hashtags_count_per_location = hashtags_location.groupBy(col("User_location")).count().select('*')
     
     hashtags_count_location = hashtags_count_per_location.writeStream.trigger(processingTime='60 seconds')\
-    .outputMode('append')\
+    .outputMode('update')\
     .option("truncate", "false")\
     .option("checkpointLocation", ".checkpoint/hashtags_checkpoint")\
     .format("console")\
@@ -94,10 +86,22 @@ if __name__ == "__main__":
         .option("kafka.bootstrap.servers", "localhost:9092") \
         .option("subscribe", "trump") \
         .option("startingOffsets", "earliest") \
+        .option("failOnDataLoss", "false") \
         .load()\
-        .select(from_json(col("value").cast("string"), schema, jsonOptions).alias("parsed_value"), col("timestamp").cast("string"))
+        .select(from_json(col("value").cast("string"), schema, jsonOptions).alias("parsed_value"))
         
-    all_tweet_data(posts_df)
+        
+    #, col("timestamp").cast("string")
+    #all_tweet_data(posts_df)
+    
+    col_stream = posts_df.writeStream.trigger(processingTime='5 seconds')\
+    .outputMode('update')\
+    .option("truncate", "false")\
+    .option("checkpointLocation", ".checkpoint/col_stream_")\
+    .format("console")\
+    .start()
+                    
+    col_stream.awaitTermination(1)
     
     hashtags_globally(posts_df)
     
