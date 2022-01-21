@@ -1,7 +1,7 @@
 # Twitter_Data_Streaming
 Twitter data streaming using APIs
 
-## Use Case 1:
+## Use Case 1: Twitter Streaming with Kafka and Python Pandas
 Streaming real-time Twitter data using twitter API, Kafka, Python.
 
 ## Prerequisite:
@@ -38,7 +38,7 @@ bin/kafka-topics.sh --create --partitions 1 --replication-factor 1 --topic trump
 ```
 5. Run the python code in new terminal - 
 ```
-python kafka_twitter_data.py
+python kafka_producer_pandas.py
 ```
 7. Start kafka consumer in new terminal-
 ```
