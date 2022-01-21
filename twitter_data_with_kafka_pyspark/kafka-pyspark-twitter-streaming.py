@@ -10,7 +10,7 @@ Created on Tue Jan 11 16:53:46 2022
 
 from pyspark.sql.types import StructType, StringType, StructField, DateType, ArrayType, MapType
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import explode, split, window
+from pyspark.sql.functions import explode, split, window, substring
 from pyspark.sql.functions import col, from_json
 #from bson import BSON
 #from bson import json_util
@@ -21,28 +21,52 @@ kafka_topic_name = "trump"
 kafka_bootstrap_servers = "localhost:9092"
 
 nestTimestampFormat = "yyyy-MM-dd'T'HH:mm:ss.sss'Z'"
-
 jsonOptions = {"timestampFormat": nestTimestampFormat}
+
+def all_data(posts_df):
+    col_stream = posts_df.writeStream.trigger(processingTime='5 seconds')\
+    .outputMode('update')\
+    .option("truncate", "false")\
+    .option("checkpointLocation", ".checkpoint/col_stream_")\
+    .format("console")\
+    .start()
+                    
+    col_stream.awaitTermination(1)
 
 
 def hashtags_globally(posts_df):
 
-    hashtags_location = posts_df.select('parsed_value.Hashtags', 'parsed_value.User_location', 'timestamp') \
-        .filter(col("Hashtags") != "[]") \
-        .filter(col("Hashtags").contains('Omicron' or 'omicron')) \
-        .filter(col("User_location") != "")
+    try:
 
-    hashtags_count_per_location = hashtags_location.groupBy(
-        col("timestamp")).count().select('*')
+        hashtags_location = posts_df.select('parsed_value.User_location','parsed_value.Hashtags', substring('timestamp', 1,16).alias("timestamp")) \
+            .filter(col("Hashtags") != "[]") \
+            .filter(col("Hashtags").contains('Omicron' or 'omicron')) \
+            .filter(col("User_location") != "")
 
-    hashtags_count_location = hashtags_count_per_location.writeStream.trigger(processingTime='60 seconds')\
-        .outputMode('update')\
-        .option("truncate", "false")\
-        .option("checkpointLocation", ".checkpoint/hh")\
-        .format("console")\
-        .start()
+        '''
+        hashtags_write_location = hashtags_location.writeStream.trigger(processingTime="120 seconds")\
+            .outputMode('append')\
+            .option("truncate", "false")\
+            .option("checkpointLocation", ".checkpoint/h")\
+            .format("csv")\
+            .option("path","./excel.csv")\
+            .start()
 
-    hashtags_count_location.awaitTermination()
+        hashtags_write_location.awaitTermination()'''
+
+        hashtags_count_per_location = hashtags_location.groupBy("timestamp","Hashtags").count().select('*')
+
+        hashtags_count_location = hashtags_count_per_location.writeStream.trigger(processingTime='60 seconds')\
+            .outputMode('update')\
+            .option("truncate", "false")\
+            .option("checkpointLocation", "./checkpoint/n")\
+            .format("console")\
+            .option("failOnDataLoss", "false")\
+            .start()
+
+        hashtags_count_location.awaitTermination()
+    except Exception as e:
+        print(e)
 
 
 def hashtags_india(hashtags_location):
@@ -90,15 +114,9 @@ if __name__ == "__main__":
 
     posts_df.printSchema()
 
-    '''
-    col_stream = posts_df.writeStream.trigger(processingTime='5 seconds')\
-    .outputMode('update')\
-    .option("truncate", "false")\
-    .option("checkpointLocation", ".checkpoint/col_stream_")\
-    .format("console")\
-    .start()
-                    
-    col_stream.awaitTermination(1)
-    '''
+
+    # all data
+
+    #all_data(posts_df)
 
     hashtags_globally(posts_df)
