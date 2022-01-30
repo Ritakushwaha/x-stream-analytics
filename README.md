@@ -1,9 +1,8 @@
-# has been Edited
 # Twitter_Data_Streaming
-Twitter data streaming using APIs
+Twitter data streaming using Twitter APIs
 
 ## Use Case 1: Twitter Streaming with Kafka and Python Pandas
-Streaming real-time Twitter data using twitter API, Kafka, Python.
+Streaming real-time Twitter Trending Hash-Tag data using twitter API, Kafka, Python.
 
 ## Prerequisite:
 1. Python
