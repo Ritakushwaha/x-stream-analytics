@@ -153,9 +153,17 @@
               <!-- MainClass in mainfest make a executable jar -->
               <archive>
                 <manifest>
-                <mainClass>com.example.twitter.data/Twitter_data_from_api</mainClass>
+                <mainClass>com.example.twitter.data.Twitter_data_from_api</mainClass>
                 </manifest>
               </archive>
+            
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                    <mainClass>com.example.twitter.data.Twitter_data_from_api</mainClass>
+                </transformer>
+
+            
+            </transformers>
     
             </configuration>
             <executions>
